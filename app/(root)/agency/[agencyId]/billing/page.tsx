@@ -1,0 +1,172 @@
+import React from "react";
+import { stripe } from "@/lib/stripe";
+import { addOnProducts, pricingCards } from "@/constants";
+import { db } from "@/lib/prisma";
+import { Separator } from "@/components/ui/separator";
+import PricingCard from "./_components/PricingCard";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import clsx from "clsx";
+import SubscriptionHelper from "./_components/SubscriptionHelper";
+
+type Props = {
+  params: { agencyId: string };
+};
+
+const page = async ({ params }: Props) => {
+  const addOns = await stripe.products.list({
+    ids: addOnProducts.map((product) => product.id),
+    expand: ["data.default_price"],
+  });
+
+  const agencySubscription = await db.agency.findUnique({
+    where: {
+      id: params.agencyId,
+    },
+    select: {
+      customerId: true,
+      Subscription: true,
+    },
+  });
+
+  const prices = await stripe.prices.list({
+    product: process.env.BUILDR_PRODUCT_ID,
+    active: true,
+  });
+
+  const charges = await stripe.charges.list({
+    limit: 50,
+    customer: agencySubscription?.customerId,
+  });
+
+  const allCharges = [
+    ...charges.data.map((charge) => ({
+      description: charge.description,
+      id: charge.id,
+      date: `${new Date(charge.created * 1000).toLocaleTimeString()} ${new Date(
+        charge.created * 1000
+      ).toLocaleDateString()}`,
+      status: "Paid",
+      amount: `$${charge.amount / 100}`,
+    })),
+  ];
+
+  const currentPrice = allCharges[0].amount.toString();
+
+  const currentPlanDetails = pricingCards.find((c) => c.price === currentPrice);
+  return (
+    <>
+      {/* <SubscriptionHelper
+        prices={prices.data}
+        customerId={agencySubscription?.customerId || ""}
+        planExists={agencySubscription?.Subscription?.active === true}
+      /> */}
+      <h1 className='text-4xl p-4'>Billing</h1>
+      <Separator className=' mb-6' />
+      <h2 className='text-2xl p-4'>Current Plan</h2>
+      <div className='flex flex-col lg:!flex-row justify-between gap-8'>
+        <PricingCard
+          planExists={agencySubscription?.Subscription?.active === true}
+          prices={prices.data}
+          customerId={agencySubscription?.customerId || ""}
+          amt={currentPrice || "0"}
+          buttonCta={
+            agencySubscription?.Subscription?.active === true
+              ? "Change Plan"
+              : "Get Started"
+          }
+          highlightDescription='Want to modify your plan? You can do this here.'
+          highlightTitle='Plan Options'
+          description={
+            currentPlanDetails?.description
+              ? currentPlanDetails?.description || "Lets get started"
+              : "Lets get started! Pick a plan that works best for you."
+          }
+          duration='/ month'
+          features={
+            currentPlanDetails?.features
+              ? currentPlanDetails?.features || []
+              : currentPlanDetails?.features ||
+                pricingCards.find((pricing) => pricing.title === "Starter")
+                  ?.features ||
+                []
+          }
+          title={
+            currentPlanDetails?.title
+              ? currentPlanDetails?.title || "Starter"
+              : "Starter"
+          }
+        />
+        {addOns.data.map((addOn) => {
+          return (
+            <PricingCard
+              id={addOn.id}
+              planExists={agencySubscription?.Subscription?.active === true}
+              prices={prices.data}
+              customerId={agencySubscription?.customerId || ""}
+              key={addOn.id}
+              amt={
+                //@ts-ignore
+                addOn.default_price?.unit_amount
+                  ? //@ts-ignore
+                    `$${addOn.default_price.unit_amount / 100}`
+                  : "$0"
+              }
+              buttonCta='Subscribe'
+              description='Dedicated support line & teams channel for support'
+              duration='/ month'
+              features={[]}
+              title={"24/7 priority support"}
+              highlightTitle='Get support now!'
+              highlightDescription='Get priority support and skip the long long with the click of a button.'
+            />
+          );
+        })}
+      </div>
+      <h2 className='text-2xl p-4'>Payment History</h2>
+      <Table className='bg-card border-[1px] border-border rounded-md'>
+        <TableHeader className='rounded-md'>
+          <TableRow>
+            <TableHead className='w-[200px]'>Description</TableHead>
+            <TableHead className='w-[200px]'>Invoice Id</TableHead>
+            <TableHead className='w-[300px]'>Date</TableHead>
+            <TableHead className='w-[200px]'>Paid</TableHead>
+            <TableHead className='text-right'>Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody className='font-medium truncate'>
+          {allCharges.map((charge) => (
+            <TableRow key={charge.id}>
+              <TableCell>{charge.description}</TableCell>
+              <TableCell className='text-muted-foreground'>
+                {charge.id}
+              </TableCell>
+              <TableCell>{charge.date}</TableCell>
+              <TableCell>
+                <p
+                  className={clsx("", {
+                    "text-emerald-500": charge.status.toLowerCase() === "paid",
+                    "text-orange-600":
+                      charge.status.toLowerCase() === "pending",
+                    "text-red-600": charge.status.toLowerCase() === "failed",
+                  })}
+                >
+                  {charge.status.toUpperCase()}
+                </p>
+              </TableCell>
+              <TableCell className='text-right'>{charge.amount}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
+  );
+};
+
+export default page;
