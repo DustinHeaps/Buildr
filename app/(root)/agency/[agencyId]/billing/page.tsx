@@ -57,7 +57,9 @@ const page = async ({ params }: Props) => {
     })),
   ];
 
-  const currentPrice = allCharges[0].amount.toString();
+  const currentSubs = allCharges.filter((charge) => charge.amount !== "$450");
+
+  const currentPrice = currentSubs[0].amount.toString();
 
   const currentPlanDetails = pricingCards.find((c) => c.price === currentPrice);
   return (
@@ -67,6 +69,7 @@ const page = async ({ params }: Props) => {
         customerId={agencySubscription?.customerId || ""}
         planExists={agencySubscription?.Subscription?.active === true}
       /> */}
+ 
       <h1 className='text-4xl p-4'>Billing</h1>
       <Separator className=' mb-6' />
       <h2 className='text-2xl p-4'>Current Plan</h2>
@@ -76,11 +79,7 @@ const page = async ({ params }: Props) => {
           prices={prices.data}
           customerId={agencySubscription?.customerId || ""}
           amt={currentPrice || "0"}
-          buttonCta={
-            agencySubscription?.Subscription?.active === true
-              ? "Change Plan"
-              : "Get Started"
-          }
+          buttonCta={currentPrice ? "Change Plan" : "Get Started"}
           highlightDescription='Want to modify your plan? You can do this here.'
           highlightTitle='Plan Options'
           description={
@@ -106,7 +105,7 @@ const page = async ({ params }: Props) => {
         {addOns.data.map((addOn) => {
           return (
             <PricingCard
-              id={addOn.id}
+              addOn={addOn}
               planExists={agencySubscription?.Subscription?.active === true}
               prices={prices.data}
               customerId={agencySubscription?.customerId || ""}

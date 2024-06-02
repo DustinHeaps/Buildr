@@ -56,11 +56,12 @@ const PipelineSettings = ({
                       description: "Pipeline is deleted",
                     });
                     router.replace(`/subaccount/${subaccountId}/pipelines`);
+                    router.refresh();
                   } catch (error) {
                     toast({
                       variant: "destructive",
                       title: "Oops!",
-                      description: "Could Delete Pipeline",
+                      description: "Could not Delete Pipeline",
                     });
                   }
                 }}

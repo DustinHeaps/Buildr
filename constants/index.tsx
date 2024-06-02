@@ -29,6 +29,7 @@ import Wallet from "@/components/icons/Wallet";
 import Warning from "@/components/icons/Warning";
 export const pricingCards = [
   {
+    id: 1,
     title: "Starter",
     description: "Perfect for trying out Buildr",
     price: "Free",
@@ -38,6 +39,7 @@ export const pricingCards = [
     priceId: "",
   },
   {
+    id: 2,
     title: "Unlimited Saas",
     description: "The ultimate agency kit",
     price: "$199",
@@ -47,6 +49,7 @@ export const pricingCards = [
     priceId: "price_1PMwPhCOfGi6tN6D7xthppSz",
   },
   {
+    id: 3,
     title: "Basic",
     description: "For serious agency owners",
     price: "$49",

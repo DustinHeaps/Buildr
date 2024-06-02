@@ -5,7 +5,6 @@ import { useModal } from "@/providers/ModalProvider";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import SubscriptionFormWrapper from "@/components/forms/SubscriptionForm/SubscriptionFormWrapper";
-
 type Props = {
   prices: PricesList["data"];
   customerId: string;
@@ -27,6 +26,7 @@ const SubscriptionHelper = ({ customerId, planExists, prices }: Props) => {
           subheading='Get started today to get access to premium features'
         >
           <SubscriptionFormWrapper
+
             planExists={planExists}
             customerId={customerId}
           />

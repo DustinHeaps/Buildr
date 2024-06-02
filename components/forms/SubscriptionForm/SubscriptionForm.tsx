@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useModal } from "@/providers/ModalProvider";
 import { Plan } from "@prisma/client";
 import {
   PaymentElement,
@@ -15,6 +16,7 @@ type Props = {
 
 const SubscriptionForm = ({ selectedPriceId }: Props) => {
   const { toast } = useToast();
+  const { setClose } = useModal();
   const elements = useElements();
   const stripeHook = useStripe();
   const [priceError, setPriceError] = useState("");
@@ -31,9 +33,7 @@ const SubscriptionForm = ({ selectedPriceId }: Props) => {
     try {
       const { error } = await stripeHook.confirmPayment({
         elements,
-        confirmParams: {
-          return_url: `${process.env.NEXT_PUBLIC_URL}/agency`,
-        },
+        redirect: "if_required",
       });
       if (error) {
         throw new Error();
@@ -42,6 +42,7 @@ const SubscriptionForm = ({ selectedPriceId }: Props) => {
         title: "Payment successfull",
         description: "Your payment has been successfully processed. ",
       });
+      setClose();
     } catch (error) {
       console.log(error);
       toast({

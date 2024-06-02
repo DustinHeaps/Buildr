@@ -16,7 +16,7 @@ import React from "react";
 import SubscriptionFormWrapper from "@/components/forms/SubscriptionForm/SubscriptionFormWrapper";
 
 type Props = {
-  id?: string;
+  addOn?: any;
   features: string[];
   buttonCta: string;
   title: string;
@@ -31,7 +31,7 @@ type Props = {
 };
 
 const PricingCard = ({
-    id,
+    addOn,
   amt,
   buttonCta,
   customerId,
@@ -48,14 +48,15 @@ const PricingCard = ({
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan");
 
-  const handleManagePlan = async () => {
-
+  const handleManagePlan = async (addOn: any) => {
+    debugger
     setOpen(
       <CustomModal
         title={"Manage Your Plan"}
         subheading='You can change your plan at any time from the billings settings'
       >
         <SubscriptionFormWrapper
+          addOn={addOn}
           customerId={customerId}
           planExists={planExists}
         />
@@ -106,7 +107,7 @@ const PricingCard = ({
               </p>
             </div>
 
-            <Button className='md:w-fit w-full' onClick={handleManagePlan}>
+            <Button className='md:w-fit w-full' onClick={() => handleManagePlan(addOn)}>
               {buttonCta}
             </Button>
           </div>
